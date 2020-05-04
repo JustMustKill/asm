@@ -160,7 +160,7 @@ start:
         mov ax, 4C00h
 	    int 21h
     MaxNotLess:
-    mov ax, MaxBorder
+    mov ax, MaxBorder  
     sub ax, MinBorder
     mov A, ax
     mov ax, MaxNumb
@@ -185,6 +185,10 @@ start:
     imul A
     add ax, B
     xor dx, dx
+    test ax, ax
+    jns Ifless1: 
+    mov dx, 0FFFFh
+    Ifless1:
     idiv A+2
     mov [si], ax
     mov bx, dx
