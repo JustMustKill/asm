@@ -193,15 +193,6 @@ start:
     mov [si], ax
     mov bx, dx
     mov ax, A+2
-    xor dx, dx   
-    idiv double
-        inc ax
-    cmp ax, bx
-    jg Arrounding:
-        mov ax, [si]
-        inc ax
-        mov [si], ax        
-    Arrounding:
     sub cx, 1h
     cmp cx, 0h
     jne NewNumbersInt: 
