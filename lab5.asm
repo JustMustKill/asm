@@ -4,8 +4,9 @@
 
 .data
     fileName db 30 dup(0) 
-    outFileName db 'outfile.txt',0h 
-    fileOpened db 'file opened', 0Dh, 0Ah, '$'
+    outFileName db '\',13 dup(0),0 
+    fileOpened db 'file opened', '$'
+    fileDontOpened db 'can not open file', '$'
     fileid dw 0
     outFileid dw 0 
     n db 0
@@ -14,16 +15,23 @@
     symbol db 0 
     argsSize db ?
     args db 120 dup('$') 
-    number db 5
-    emptyArgs db 'no cmd args', '$'
+    emptyArgs db 'bad cmd args', '$'
     error db 'error', '$'
-    endedStr db 'ended', '$'
+    endedStr db 'programm ended', '$'
 .code
 
 outStr macro str
     mov ah, 09h
     mov dx, offset str
-    int 21h    
+    int 21h
+    
+    mov dl, 0Ah             
+	mov ah, 02h           
+	int 21h 
+	
+	mov dl, 0Dh             
+	mov ah, 02h             
+	int 21h     
 endm    
   
 readSymbol proc 
@@ -35,11 +43,11 @@ readSymbol proc
     int 21h
     cmp ax, 0
     je clearCall
-    cmp symbol, 0Dh
+    cmp symbol, 0Ah
     je lineEnded
     popa
     ret
-clearCall:
+clearCall: 
     call clear 
 lineEnded:
     inc numOfCurrentLine   
@@ -57,11 +65,10 @@ findLineBegEnd:
     ret         
 findlLineBeg endp 
     
-
 skipLineProc proc
 skipLineProcBegin:
     call readSymbol
-    cmp symbol, 0Dh
+    cmp symbol, 0Ah
     je skipLineProcLineEnded
     jmp skipLineProcBegin
 skipLineProcLineEnded:
@@ -111,7 +118,7 @@ processingArgsFilename:
     movsb
     jmp processingArgsFilename    
 processingArgsError:
-    outStr error
+    outStr emptyArgs
     ret
 processingEnded:
     ret               
@@ -149,11 +156,12 @@ start:
     mov ax, 3D00h
     mov dx, offset fileName
     int 21h
+    jc fileError 
     mov fileid, ax
     jnc opened 
     jmp ended
 continue:      
-    mov ah, 5Bh
+    mov ah, 5Ah
     xor cx, cx
     mov cx, 7
     mov dx, offset outFileName
@@ -176,7 +184,9 @@ opened:
     jmp continue 
 emptyArgsM:
     outStr emptyArgs
-    jmp ended                              
+    jmp ended
+fileError:
+    outStr fileDontOpened                              
 ended:
     outStr endedStr
     mov ah, 4Ch
